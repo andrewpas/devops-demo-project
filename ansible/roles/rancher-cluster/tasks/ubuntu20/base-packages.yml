@@ -1,0 +1,13 @@
+---
+# @action ./tasks/ubuntu20/base-packages.yml # Визначає які пакети вже є в системі та встановлює лише ті, яких не вистачає. Необхідні пакети визначаються у змінній `base_packages`. Вираз `name: {{ base_packages | difference(ansible_facts.packages) }}` порівнює список пакетів зі змінною та з наявними в системі, тому встановлюється тільки різниця.
+- name: Get facts about installed packages
+  ansible.builtin.package_facts:
+    manager: auto
+
+- name: Install base system packages for Debian family
+  ansible.builtin.apt:
+    name: "{{ base_packages | difference(ansible_facts.packages) }}"
+    state: present
+    update_cache: yes
+    force_apt_get: yes
+

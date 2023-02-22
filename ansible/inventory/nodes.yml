@@ -1,0 +1,120 @@
+---
+kubernetes:
+  gather_facts: false
+  hosts:
+    node1.example.net:
+      ansible_port: 22
+      ansible_host: 192.168.101.141
+      ansible_distribution: ubuntu
+      ansible_distribution_release: focal
+      ansible_fqdn: "node1.example.net"
+      ansible_domain: "example.net"
+      ansible_hostname: "node1.example.net"
+      inventory_hostname: "node1.example.net"
+      ansible_nodename: "node1"
+      rancher_image: "rancher:v2.6.6"
+      rancher_agent_image: "rancher-agent:v2.6.6"
+      rancher_node_role: server
+      rancher_k8s_version: "1.20.15"
+      rancher_setup_password: "xxxxxxxxxxxxxxxxxxxxxxx"
+      rancher_role_flags: "--etcd --controlplane --worker"
+      rancher_server_url_name: "https://192.168.101.141"
+      rancher_init_ip: 192.168.101.141
+      rancher_cluster_name: dev-cluster
+      ansible_ens18:
+        device: ens18
+        ipv4:
+          address: 192.168.101.141
+
+
+    node2.example.net:
+      ansible_port: 22
+      ansible_host: 192.168.101.142
+      ansible_distribution: "ubuntu"
+      ansible_distribution_release: "focal"
+      ansible_fqdn: "node2.example.net"
+      ansible_domain: "example.net"
+      ansible_hostname: "node2.example.net"
+      inventory_hostname: "node2.example.net"
+      ansible_nodename: "node2"
+      rancher_image: "rancher:v2.6.6"
+      rancher_agent_image: "rancher-agent:v2.6.6"
+      rancher_node_role: "control"
+      rancher_k8s_version: "1.20.15"
+      rancher_role_flags: "--etcd --controlplane --worker"
+      rancher_server_url_name: "https://192.168.101.141"
+      rancher_init_ip: 192.168.101.141
+      rancher_cluster_name: "dev-cluster"
+      ansible_ens18:
+        device: ens18
+        ipv4:
+          address: 192.168.101.142
+
+    node3.example.net:
+      ansible_port: 22
+      ansible_host: 192.168.101.143
+      ansible_distribution: "ubuntu"
+      ansible_distribution_release: "focal"
+      ansible_fqdn: "node3.example.net"
+      ansible_domain: "example.net"
+      ansible_hostname: "node3.example.net"
+      inventory_hostname: "node3.example.net"
+      ansible_nodename: "node3"
+      rancher_image: "rancher:v2.6.6"
+      rancher_agent_image: "rancher-agent:v2.6.6"
+      rancher_node_role: "control"
+      rancher_k8s_version: "1.20.15"
+      rancher_role_flags: "--etcd --controlplane --worker"
+      rancher_server_url_name: "https://192.168.101.141"
+      rancher_init_ip: 192.168.101.141
+      rancher_cluster_name: "dev-cluster"
+      ansible_ens18:
+        device: ens18
+        ipv4:
+          address: 192.168.101.143
+
+    node4.example.net:
+      ansible_port: 22
+      ansible_host: 192.168.101.144
+      ansible_distribution: "ubuntu"
+      ansible_distribution_release: "focal"
+      ansible_fqdn: "node4.example.net"
+      ansible_domain: "example.net"
+      ansible_hostname: "node4.example.net"
+      inventory_hostname: "node4.example.net"
+      ansible_nodename: "node4"
+      rancher_image: "rancher:v2.6.6"
+      rancher_agent_image: "rancher-agent:v2.6.6"
+      rancher_node_role: "node"
+      rancher_k8s_version: "1.20.15"
+      rancher_role_flags: "--worker"
+      rancher_server_url_name: "https://192.168.101.141"
+      rancher_init_ip: 192.168.101.141
+      rancher_cluster_name: "dev-cluster"
+      ansible_ens18:
+        device: ens18
+        ipv4:
+          address: 192.168.101.144
+
+    node5.example.net:
+      ansible_port: 22
+      ansible_host: 192.168.101.145
+      ansible_distribution: "ubuntu"
+      ansible_distribution_release: "focal"
+      ansible_fqdn: "node5.example.net"
+      ansible_domain: "example.net"
+      ansible_hostname: "node5.example.net"
+      inventory_hostname: "node5.example.net"
+      ansible_nodename: "node5"
+      rancher_image: "rancher:v2.6.6"
+      rancher_agent_image: "rancher-agent:v2.6.6"
+      rancher_node_role: "node"
+      rancher_k8s_version: "1.20.15"
+      rancher_role_flags: "--worker"
+      rancher_server_url_name: "https://192.168.101.141"
+      rancher_init_ip: 192.168.101.141
+      rancher_cluster_name: "dev-cluster"
+      ansible_ens18:
+        device: ens18
+        ipv4:
+          address: 192.168.101.145

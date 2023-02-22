@@ -1,0 +1,69 @@
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: prod-cartservice
+  namespace: prod-microservices-demo
+  labels:
+    deployment_name: prod-cartservice
+    app.kubernetes.io/name: cartservice
+    app.kubernetes.io/version: "0.1.0"
+    project_name: microservices-demo
+    namespace_name: prod-microservices-demo
+    app.kubernetes.io/created-by: developer_company.com
+    app.kubernetes.io/managed-by: devops_company.com
+    environment_stage: prod
+    environment_uri: prod-env.company.com
+    app.kubernetes.io/component: advertise-service
+    business_domain: sales
+    business_owner: marketing_company.com
+    app.kubernetes.io/instance: baremetal-rancher
+
+spec:
+  replicas: 1
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxSurge: 25%
+      maxUnavailable: 25%
+  template:
+    metadata:
+      name: prod-cartservice
+      namespace: prod-microservices-demo
+      labels:
+        deployment_name: prod-cartservice
+        deployment_app: cartservice
+        app.kubernetes.io/name: cartservice
+        app.kubernetes.io/version: "0.1.0"
+        project_name: microservices-demo
+        namespace_name: prod-microservices-demo
+    spec:
+      containers:
+        - name: prod-cartservice
+          image: registry.gitlab.com/devops1121/microservices-demo-google/cartservice:stage
+          imagePullPolicy: Always
+          resources:
+            requests:
+              memory: 512Mi
+              cpu: 500m
+            limits:
+              memory: 1Gi
+              cpu: 1000m
+          ports:
+            - containerPort: 7070
+              protocol: TCP
+              name: grpc
+          env:
+          - name: REDIS_ADDR
+            value: "redis-cart:6379"
+
+      restartPolicy: Always
+      imagePullSecrets:
+        - name: registry.gitlab
+  selector:
+    matchLabels:
+      deployment_app: cartservice
+      namespace_name: prod-microservices-demo
+      environment_stage: prod
+
+

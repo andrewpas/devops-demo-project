@@ -1,0 +1,21 @@
+---
+# @action ./tasks/rancher-nodes.yml # Очікує 5 хвилин щоб кластер та `Control Plane` ноди повністю розгорнулися, імпортує значення змінної `export_node_start` з віртуального хоста, додає `Worker Node` до кластера. Задача виконується тільки на нодах де в inventory `rancher_node_role: "node"`
+- name: SHELL Wait
+  ansible.builtin.pause:
+    minutes: 5
+  when:
+    - (rancher_node_role == "node")
+
+- name: Get "export_node_start" var from dummy_host
+  ansible.builtin.shell: |
+    echo "{{ hostvars['rancher_node_start_command']['export_node_start']}}"
+  register: node_start_prefix
+  when:
+    - (rancher_node_role == "node")
+
+- name: RANCHER Add nodes
+  ansible.builtin.shell: |
+    {{node_start_prefix.stdout}} {{rancher_role_flags}}
+  when:
+    - (rancher_node_role == "node")
+

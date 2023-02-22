@@ -1,0 +1,3 @@
+.kubectl_vars:
+  KUBE_CONTEXT: "devops1121/microservices-demo-google:dev-cluster"
+  PROJECT_NAMESPACE: "microservices-demo"

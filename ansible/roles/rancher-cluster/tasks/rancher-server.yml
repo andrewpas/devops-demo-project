@@ -1,0 +1,86 @@
+---
+# @action ./tasks/rancher-server.yml # Запускає на ноді з `rancher_node_role: "server"` контейнер `ranсher-server`, який запускає процес інсталювання, та приймає з\'єднання на портах 80,443. На ці операції відведено 3 хвилини (в залежності від "заліза" можна вказати свої параметри). Потім за допомогою `curl` здійснюються 3 спроби логину на сервер - це "хак", бо Rancher незрозуміло поводить себе с токенами, дуже часто їх змінює. Експерименти показали, що з третьої спроби логін на сервер працює без помилок. Також все запрацювало тільки після заміни `ansible.builtin.command` на `ansible.builtin.shell` в завданнях. Результат сесії логіну - це json, з якого за допомогою `jq` знаходиться значення параметра `token`. Він зберігається для інших завдань за допомогою "віртуального" host в inventory: `ansible.builtin.add_host`. Таким чином, експортується змінна `export_login_token`. За допомогою `rancher_login_token.stdout` завантажується api key з сервера, який також експортується через "віртуальний" хост, як змінна `rancher_api_key`. За допомогою `rancher_api_key` призначуєтеся значення змінної `rancher_server_url_name`.
+- name: Start Rancher Server Docker container
+  community.docker.docker_container:
+    name: rancher-server
+    state: started
+    image: 'rancher/{{ rancher_image }}'
+    detach: yes
+    privileged: yes
+    restart_policy: unless-stopped
+    validate_certs: no
+    env: CATTLE_BOOTSTRAP_PASSWORD='{{rancher_setup_password}}'
+    sysctls: 'net.ipv4.ip_forward=1'
+    uts: host
+    volumes:
+      - /opt/rancher:/var/lib/rancher
+      - /opt/rancher-logs:/var/log/auditlog
+      - /etc/localtime:/etc/localtime:ro
+      - /etc/kubernetes:/etc/kubernetes
+    ports:
+      - 80:80
+      - 443:443
+  register: rancher_started
+  when:
+    - (rancher_node_role == "server")
+
+- name: Wait 3 minutes until Rancher server pull and start other Docker images
+  ansible.builtin.pause:
+    minutes: 3
+
+
+- name: First Login to the Rancher Server (cUrl method)
+  ansible.builtin.shell: |
+    curl --location --insecure https://{{ rancher_init_ip }}/v3-public/localProviders/local?action=login --header 'content-type: application/json' --data-binary '{"username":"admin","password":"{{rancher_setup_password}}"}'
+  ignore_errors: yes
+  when:
+    - (rancher_node_role == "server")
+
+- name: Second login to the Rancher (cUrl method)
+  ansible.builtin.shell: |
+    curl --location --insecure https://{{ rancher_init_ip }}/v3-public/localProviders/local?action=login --header 'content-type: application/json' --data-binary '{"username":"admin","password":"{{rancher_setup_password}}"}' | jq -r .token
+  ignore_errors: yes
+  when:
+    - (rancher_node_role == "server")
+
+- name: Final login to the Rancher (cUrl method) and register login_token
+  ansible.builtin.shell: |
+    curl --location --insecure https://{{ rancher_init_ip }}/v3-public/localProviders/local?action=login --header 'content-type: application/json' --data-binary '{"username":"admin","password":"{{rancher_setup_password}}"}' | jq -r .token
+  register: rancher_login_token
+  when:
+    - (rancher_node_role == "server")
+
+- name: Export "rancher_logintoken" var for other tasks
+  ansible.builtin.add_host:
+    name: rancher_login_token
+    groups: rancher-lab
+    export_login_token: "{{rancher_login_token.stdout}}"
+  register: export_login_token
+
+- name: Get API-key from Rancher server
+  ansible.builtin.shell: |
+    curl --insecure 'https://{{ rancher_init_ip }}/v3/token' -H 'content-type: application/json' -H "Authorization: Bearer {{ rancher_login_token.stdout }}" --data-binary '{"type":"token","description":"automation"}' | jq -r .token
+  register: rancher_api_key
+  when:
+    - (rancher_node_role == "server")
+
+- name: Export "rancher_api_key" var for other tasks
+  ansible.builtin.add_host:
+    name: rancher_api_key
+    groups: rancher-lab
+    export_api_key: "{{rancher_api_key.stdout}}"
+  register: export_api_key
+
+- name: Set Rancher Server url_name
+  ansible.builtin.shell: |
+    curl --insecure --location --request PUT 'https://{{ rancher_init_ip }}/v3/settings/server-url' -H 'content-type: application/json' -H "Authorization: Bearer {{ rancher_api_key.stdout }}" --data-binary '{"name":"server-url","value":"{{rancher_server_url_name}}"}'
+  when:
+    - (rancher_node_role == "server")
+
+
+
+
+
+
+
+

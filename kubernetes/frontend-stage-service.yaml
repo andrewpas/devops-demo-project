@@ -1,0 +1,19 @@
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: frontend
+  namespace: stage-microservices-demo
+spec:
+  internalTrafficPolicy: Cluster
+  ports:
+    - name: http
+      port: 80
+      protocol: TCP
+      targetPort: 8080
+  selector:
+    app: frontend
+    project: microservices-demo
+    stage: stage
+  sessionAffinity: None
+  type: ClusterIP

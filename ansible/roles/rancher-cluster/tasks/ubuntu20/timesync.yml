@@ -1,0 +1,15 @@
+---
+# @action ./tasks/ubuntu20/timesync.yml # Створює конфігураційний файл для демона точного часу `tymesyncd`, завантажує на всі ноди, та перезапускає сервіс, щоб не було розбіжностей в часі. Використовується шаблон `/templates/timesyncd.conf.j2`, але без змінних для серверів часу та інших параметрів.
+- name: Change tymesyncd.conf
+  ansible.builtin.template:
+    dest: /etc/systemd/timesyncd.conf
+    src: ../templates/timesyncd.conf.j2
+    backup: yes
+    force: yes
+
+- name: Restart tymesyncd
+  ansible.builtin.systemd:
+    name: systemd-timesyncd
+    state: restarted
+    force: yes
+    daemon_reload: yes

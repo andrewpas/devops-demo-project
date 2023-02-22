@@ -1,0 +1,75 @@
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: prod-emailservice
+  namespace: prod-microservices-demo
+  labels:
+    deployment_name: prod-emailservice
+    app.kubernetes.io/name: emailservice
+    app.kubernetes.io/version: "0.1.0"
+    project_name: microservices-demo
+    namespace_name: prod-microservices-demo
+    app.kubernetes.io/created-by: developer_company.com
+    app.kubernetes.io/managed-by: devops_company.com
+    environment_stage: prod
+    environment_uri: prod-env.company.com
+    app.kubernetes.io/component: advertise-service
+    business_domain: sales
+    business_owner: marketing_company.com
+    app.kubernetes.io/instance: baremetal-rancher
+
+spec:
+  replicas: 1
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxSurge: 25%
+      maxUnavailable: 25%
+  template:
+    metadata:
+      name: prod-emailservice
+      namespace: prod-microservices-demo
+      labels:
+        deployment_name: prod-emailservice
+        deployment_app: emailservice
+        app.kubernetes.io/name: emailservice
+        app.kubernetes.io/version: "0.1.0"
+        project_name: microservices-demo
+        namespace_name: prod-microservices-demo
+    spec:
+      containers:
+        - name: prod-emailservice
+          image: registry.gitlab.com/devops1121/microservices-demo-google/emailservice:stage
+          imagePullPolicy: Always
+          resources:
+            requests:
+              memory: 512Mi
+              cpu: 500m
+            limits:
+              memory: 1Gi
+              cpu: 1000m
+          ports:
+            - containerPort: 8080
+              protocol: TCP
+              name: grpc
+          env:
+          - name: PORT
+            value: "8080"
+          - name: "DISABLE_TRACING"
+            value: "1"
+          - name: "DISABLE_PROFILER"
+            value: "1"
+          - name: "DISABLE_STATS"
+            value: "1"
+ 
+      restartPolicy: Always
+      imagePullSecrets:
+        - name: registry.gitlab
+  selector:
+    matchLabels:
+      deployment_app: emailservice
+      namespace_name: prod-microservices-demo
+      environment_stage: prod
+
+

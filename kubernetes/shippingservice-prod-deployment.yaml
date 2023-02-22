@@ -1,0 +1,77 @@
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: prod-shippingservice
+  namespace: prod-microservices-demo
+  labels:
+    deployment_name: prod-shippingservice
+    app.kubernetes.io/name: shippingservice
+    app.kubernetes.io/version: "0.1.0"
+    project_name: microservices-demo
+    namespace_name: prod-microservices-demo
+    app.kubernetes.io/created-by: developer_company.com
+    app.kubernetes.io/managed-by: devops_company.com
+    environment_stage: prod
+    environment_uri: prod-env.company.com
+    app.kubernetes.io/component: advertise-service
+    business_domain: sales
+    business_owner: marketing_company.com
+    app.kubernetes.io/instance: baremetal-rancher
+
+spec:
+  replicas: 1
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxSurge: 25%
+      maxUnavailable: 25%
+  template:
+    metadata:
+      name: prod-shippingservice
+      namespace: prod-microservices-demo
+      labels:
+        deployment_name: prod-shippingservice
+        deployment_app: shippingservice
+        app.kubernetes.io/name: shippingservice
+        app.kubernetes.io/version: "0.1.0"
+        project_name: microservices-demo
+        namespace_name: prod-microservices-demo
+    spec:
+      containers:
+        - name: prod-shippingservice
+          image: registry.gitlab.com/devops1121/microservices-demo-google/shippingservice:stage
+          imagePullPolicy: Always
+          resources:
+            requests:
+              memory: 512Mi
+              cpu: 500m
+            limits:
+              memory: 1Gi
+              cpu: 1000m
+          ports:
+            - containerPort: 50051
+              protocol: TCP
+              name: grpc
+          env:
+          - name: PORT
+            value: "50051"
+          - name: "DISABLE_STATS"
+            value: "1"
+          - name: "DISABLE_TRACING"
+            value: "1"
+          - name: "DISABLE_PROFILER"
+            value: "1"
+          - name: "PRODUCT_CATALOG_SERVICE_ADDR"
+            value: "productcatalogservice:3550"
+
+      restartPolicy: Always
+      imagePullSecrets:
+        - name: registry.gitlab
+  selector:
+    matchLabels:
+      deployment_app: shippingservice
+      namespace_name: prod-microservices-demo
+      environment_stage: prod
+
+

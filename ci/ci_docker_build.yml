@@ -1,0 +1,29 @@
+.build_image:
+  stage: build-debug-image
+  script:
+    - cd .$BUILD_CONTEXT
+    - docker build -t $DEBUG_TAG .
+    - docker push $DEBUG_TAG
+
+.pull_debug_commit_sha:
+  stage: pull-debug
+  script:
+    - docker pull $DEBUG_TAG
+
+.deploy_latest_tag_to_registry:
+  stage: push-image
+  script:
+    - docker tag $DEBUG_TAG $DEV_TAG
+    - docker push $DEV_TAG
+  rules:
+    - if: '$CI_COMMIT_BRANCH == "dev"'
+  when: on_success
+
+.deploy_branch_tag_to_registry:
+  stage: push-image
+  script:
+    - docker tag  $DEBUG_TAG $BRANCH_TAG
+    - docker push $BRANCH_TAG
+  rules:
+    - if: '$CI_COMMIT_BRANCH == "stage" || $CI_COMMIT_BRANCH == "main"'
+  when: on_success

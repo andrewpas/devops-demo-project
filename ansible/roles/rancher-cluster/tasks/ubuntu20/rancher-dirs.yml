@@ -1,0 +1,12 @@
+---
+# @action ./tasks/ubuntu20/rancher-dirs.yml # Створює каталоги для даних Rancher, які потім будуть примонтовані в Docker контейнери через `volumes`.
+- name: Create volume dir for Rancher containers volumes
+  ansible.builtin.file:
+    path: "{{ item }}"
+    force: yes
+    state: directory
+  loop:
+    - /opt/rancher
+    - /opt/compose
+    - /opt/rancher-logs
+    - /etc/kubernetes

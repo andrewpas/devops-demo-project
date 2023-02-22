@@ -1,0 +1,19 @@
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: shippingservice
+  namespace: stage-microservices-demo
+spec:
+  internalTrafficPolicy: Cluster
+  ports:
+    - name: grpc
+      port: 50051
+      protocol: TCP
+      targetPort: 50051
+  selector:
+    app: shippingservice
+    project: microservices-demo
+    stage: stage
+  sessionAffinity: None
+  type: ClusterIP

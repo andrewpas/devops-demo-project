@@ -1,0 +1,68 @@
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ deployment_name }}
+  namespace: {{ namespace_name }}
+  labels:
+    deployment_name: {{ deployment_name }}
+    app.kubernetes.io/name: {{ app_name }}
+    app.kubernetes.io/version: "{{ app_version }}"
+    project_name: {{ project_name }}
+    namespace_name: {{ namespace_name }}
+    app.kubernetes.io/created-by: {{ app_creator }}
+    app.kubernetes.io/managed-by: {{ app_supporter }}
+    environment_stage: {{ environment_stage }}
+    environment_uri: {{ environment_uri }}
+    app.kubernetes.io/component: {{ app_component }}
+    business_domain: {{ business_domain }}
+    business_owner: {{ business_owner}}
+    app.kubernetes.io/instance: {{ app_instance }}
+
+spec:
+  replicas: {{ app_replicas }}
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxSurge: 25%
+      maxUnavailable: 25%
+  template:
+    metadata:
+      name: {{ deployment_name }}
+      namespace: {{ namespace_name }}
+      labels:
+        deployment_name: {{ deployment_name }}
+        deployment_app: {{ deployment_app }}
+        app.kubernetes.io/name: {{ app_name }}
+        app.kubernetes.io/version: "{{ app_version }}"
+        project_name: {{ project_name }}
+        namespace_name: {{ namespace_name }}
+    spec:
+      containers:
+        - name: {{ deployment_name }}
+          image: {{ image }}
+          imagePullPolicy: Always
+          resources:
+            requests:
+              memory: {{ requests_memory }}
+              cpu: {{ requests_cpu }}
+            limits:
+              memory: {{ limits_memory }}
+              cpu: {{ limits_cpu }}
+          ports:
+            - containerPort: {{ ports_container_port }}
+              protocol: {{ ports_protocol }}
+              name: {{port_name}}
+          env:
+          {{app_env}}
+      restartPolicy: Always
+      imagePullSecrets:
+        - name: {{ image_pull_secrets }}
+  selector:
+    matchLabels:
+      deployment_app: {{ deployment_app }}
+      namespace_name: {{ namespace_name }}
+      environment_stage: {{ environment_stage }}
+
+
+

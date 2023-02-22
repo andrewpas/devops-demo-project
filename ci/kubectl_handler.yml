@@ -1,0 +1,20 @@
+#include:
+#  - project: "devops1121/ci-templates"
+#    ref: "main"
+#    file:
+#      - ci/ci_variables.yml
+
+
+.kubectl-handler:
+  stage: deploy
+  variables:
+    extends: .global_vars
+  before_script:
+    - ""
+  image:
+    name: bitnami/kubectl:latest
+    entrypoint: [ '' ]
+  script:
+    - kubectl config get-contexts
+    - 'kubectl config use-context $KUBE_CONTEXT'
+    - 'kubectl config set-context --current --namespace=$PROJECT_NAMESPACE'

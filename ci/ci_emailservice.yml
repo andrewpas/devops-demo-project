@@ -1,0 +1,157 @@
+include:
+  - project: "devops1121/microservices-demo-google"
+    ref: "ci-template"
+    file:
+      - ci/ci_docker_build.yml
+      - ci/ci_variables.yml
+      - ci/kubectl_handler.yml
+
+variables: &global_var
+  extends: .global_vars
+
+stages:
+  - build-debug-image
+  - pull-debug
+  - push-image
+  - deploy
+
+.emailservice_auto_rules:
+  rules:
+    - changes:
+        - src/emailservice/**/**/*
+      when: always
+
+.emailservice_manual_rules:
+  rules:
+    - if: "$CI_COMMIT_MESSAGE =~ /emailservice-manual/"
+      when: always
+
+auto_emailservice_debug:
+  stage: build-debug-image
+  variables:
+    <<: *global_var
+    BUILD_CONTEXT: /src/emailservice/
+    IMAGE_NAME: emailservice
+  extends:
+    - .emailservice_auto_rules
+    - .build_image
+
+manual_emailservice_debug:
+  stage: build-debug-image
+  variables:
+    <<: *global_var
+    BUILD_CONTEXT: /src/emailservice/
+    IMAGE_NAME: emailservice
+  extends:
+    - .emailservice_manual_rules
+    - .build_image
+
+pull_auto_emailservice_sha:
+  stage: pull-debug
+  variables:
+    <<: *global_var
+    IMAGE_NAME: emailservice
+  extends:
+    - .emailservice_auto_rules
+    - .pull_debug_commit_sha
+  needs:
+    - job: auto_emailservice_debug
+      optional: true
+
+pull_manual_emailservice_sha:
+  stage: pull-debug
+  variables:
+    <<: *global_var
+    IMAGE_NAME: emailservice
+  extends:
+    - .emailservice_manual_rules
+    - .pull_debug_commit_sha
+  needs:
+    - job: manual_emailservice_debug
+      optional: true
+
+push_emailservice_image:
+  stage: push-image
+  variables:
+    <<: *global_var
+    IMAGE_NAME: emailservice
+  extends:
+    - .deploy_latest_tag_to_registry
+    - .deploy_branch_tag_to_registry
+  rules:
+    - !reference [ ".emailservice_auto_rules", "rules" ]
+    - !reference [ ".emailservice_manual_rules", "rules" ]
+  needs:
+    - job: pull_manual_emailservice_sha
+      optional: true
+    - job: pull_auto_emailservice_sha
+      optional: true
+
+manual_deploy_latest_image:
+  before_script:
+    - ""
+  stage: push-image
+  variables:
+    <<: *global_var
+    IMAGE_NAME: emailservice
+  image:
+    name: bitnami/kubectl:latest
+    entrypoint: [ "" ]
+  extends:
+    - .kubectl-handler
+  script:
+    - 'kubectl set image deployment/emailservice emailservice=$DEV_TAG'
+  environment:
+    name: stage
+    url: http://stage-cluster.dvpslabs.com
+  needs:
+    - job: push_emailservice_image
+      optional: true
+  rules:
+    - if: '$CI_COMMIT_BRANCH == "dev"'
+  when: manual
+
+auto_deploy_stage_emailservice:
+  before_script:
+    - ""
+  stage: deploy
+  variables:
+    <<: *global_var
+  image:
+    name: bitnami/kubectl:latest
+    entrypoint: [ "" ]
+  extends:
+    - .kubectl-handler
+  script:
+    - kubectl apply -f kubernetes/emailservice-stage-deployment.yaml
+    - kubectl apply -f kubernetes/emailservice-stage-service.yaml
+  rules:
+    - changes:
+        - kubernetes/emailservice-stage-deployment.yaml
+        - kubernetes/emailservice-stage-service.yaml
+      when: always
+    - if: '$CI_COMMIT_BRANCH == "stage"'
+  environment:
+    name: stage
+    url: http://stage-cluster.dvpslabs.com
+
+manual_deploy_production_emailservice:
+  before_script:
+    - ""
+  stage: deploy
+  variables:
+    <<: *global_var
+  image:
+    name: bitnami/kubectl:latest
+    entrypoint: [ "" ]
+  extends:
+    - .kubectl-handler
+  script:
+    - kubectl apply -f kubernetes/emailservice-prod-deployment.yaml
+    - kubectl apply -f kubernetes/emailservice-prod-service.yaml
+  rules:
+    - if: '$CI_COMMIT_BRANCH == "main"'
+  environment:
+    name: stage
+    url: http://stage-cluster.dvpslabs.com
+  when: manual

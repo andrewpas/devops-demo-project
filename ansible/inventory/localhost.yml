@@ -1,0 +1,4 @@
+localhost:
+  hosts:
+    ansible_port: 22 # SSH host port (default 22)
+    ansible_host: localhost # Host IP

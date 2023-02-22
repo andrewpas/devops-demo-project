@@ -1,0 +1,31 @@
+---
+doctoc: true
+input:
+  global-frontmatter.md: { noYAML: true, doctoc: true }
+  ./docs-intro.md: { noYAML: true, doctoc: true }
+  ./dev-stage.md: { noYAML: true, doctoc: true }
+  ./uat-stage.md: { noYAML: true, doctoc: true }
+  ./production-stage.md: { noYAML: true, doctoc: true }
+  #  ./aws-services.md: { noYAML: true, doctoc: true }
+  ./ci-cd.md: { noYAML: true, doctoc: true }
+  ./ci-vars.md: { noYAML: true, doctoc: true }
+  ./ci-workflow.md: { noYAML: true, doctoc: true }
+  ./ci-templates.md: { noYAML: true, doctoc: true }
+  ./gitlab-agent.md: { noYAML: true, doctoc: true }
+  ../ansible/roles/rancher-cluster/docs/about_role.md: { noYAML: true, doctoc: true }
+  ../ansible/roles/rancher-cluster/docs/README.md: { noYAML: true, doctoc: true }
+  ../ansible/roles/rancher-cluster/docs/example_inventory.md: { noYAML: true, doctoc: true }
+  ../terraform/Readme.md: { doctoc: true }
+  ./make-docs.md: { noYAML: true, doctoc: true }
+output:
+  name: ../README.md
+  doctoc:
+    mode: gitlab
+    maxlevel: 5
+    title: "# Документація по проекту"
+    notitle: false
+    entryprefix: ""
+    all: true
+    stdout: true
+    update-only: false
+---

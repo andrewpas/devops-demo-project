@@ -1,0 +1,5 @@
+---
+- name: Create Rancher Kubernetes cluster
+  hosts: kubernetes
+  roles:
+    - rancher-cluster

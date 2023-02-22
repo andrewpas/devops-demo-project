@@ -1,0 +1,29 @@
+---
+- name: Rancher base system setup
+  include_tasks: "{{ item }}"
+  loop:
+    - ./ubuntu20/timesync.yml
+    - ./ubuntu20/upgrade.yml
+    - ./ubuntu20/hosts.yml
+    - ./ubuntu20/base-packages.yml
+    - ./ubuntu20/pip.yml
+  when:
+    - (ansible_distribution == "Ubuntu") and (ansible_distribution_release == "focal")
+
+- name: Create Rancher dirs
+  include_tasks: ./ubuntu20/rancher-dirs.yml
+
+- name: Intsall Docker
+  include_tasks: ./ubuntu20/docker.yml
+
+- name: Install Rancher server
+  include_tasks: rancher-server.yml
+
+- name: Create Rancher cluster
+  include_tasks: rancher-cluster.yml
+
+- name: Install Rancher controlplane for cluster
+  include_tasks: rancher-control.yml
+
+- name: Install Rancher nodes for cluster
+  include_tasks: rancher-nodes.yml

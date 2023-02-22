@@ -1,0 +1,43 @@
+---
+# @action ./tasks/rancher-cluster.yml # Імпортує `rancher_api_key` з "віртуального" хоста. Створює Kubernetes кластер зі значеннями змінних `rancher_k8s_version` та `rancher_cluster_name`. Генерує bearer token для реєстрації нод - `rancher_registration_token`, посилання для реєстрації нод - `rancher_registration_link`, команду для реєстрації нод - `rancher_node_register`, до якої буде додаватись змінна `rancher_role_flags`, в залежності від ролі ноди в кластері. Всі ці змінні експортуються через "віртуальні" хости для інших задач.
+- name: Get "rancher_api_key" var from dummy_host
+  ansible.builtin.shell: |
+    echo "{{ hostvars['rancher_api_key']['export_api_key']}}"
+  register: rancher_api_key
+
+- name: RANCHER Create Rancher claster and get Cluster ID
+  ansible.builtin.shell: |
+    curl --insecure 'https://{{ rancher_init_ip }}/v3/cluster' -H 'content-type: application/json' -H "Authorization: Bearer {{ rancher_api_key.stdout }}" --data-binary '{"dockerRootDir":"/var/lib/docker","enableNetworkPolicy":false,"type":"cluster","rancherKubernetesEngineConfig":{"kubernetesVersion":"{{ rancher_k8s_version }}","addonJobTimeout":30,"ignoreDockerVersion":true,"sshAgentAuth":false,"type":"rancherKubernetesEngineConfig","authentication":{"type":"authnConfig","strategy":"x509"},"network":{"options":{"flannelBackendType":"vxlan"},"plugin":"calico","canalNetworkProvider":{"iface":"eth1"}},"ingress":{"type":"ingressConfig","provider":"nginx"},"monitoring":{"type":"monitoringConfig","provider":"metrics-server"},"services":{"type":"rkeConfigServices","kubeApi":{"podSecurityPolicy":false,"type":"kubeAPIService"},"etcd":{"creation":"12h","extraArgs":{"heartbeat-interval":500,"election-timeout":5000},"retention":"72h","snapshot":true,"type":"etcdService","backupConfig":{"enabled":true,"intervalHours":12,"retention":6,"type":"backupConfig"}}}},"localClusterAuthEndpoint":{"enabled":true,"type":"localClusterAuthEndpoint"},"name":"{{ rancher_cluster_name }}"}' | jq -r .id
+  register: rancher_cluster_id
+  when:
+    - (rancher_node_role == "server")
+
+- name: Create RANCHER Cluster registration token for nodes
+  ansible.builtin.shell: |
+    curl --insecure 'https://{{ rancher_init_ip }}/v3/clusterregistrationtoken' -H 'content-type: application/json' -H "Authorization: Bearer {{ rancher_api_key.stdout }}" --data-binary '{"type":"clusterRegistrationToken","clusterId":"{{ rancher_cluster_id.stdout }}"}' | jq -r .token
+  register: rancher_registration_token
+  when:
+    - (rancher_node_role == "server")
+
+- name: Get Rancher Registration Link for nodes
+  ansible.builtin.shell: |
+    curl -Lk 'https://{{ rancher_init_ip }}/v3/clusterregistrationtoken?clusterId={{ rancher_cluster_id.stdout }}' -H 'content-type: application/json' -H "Authorization: Bearer {{ rancher_api_key.stdout }}" --data-binary '{"type":"clusterRegistrationToken","clusterId":"{{ rancher_cluster_id.stdout }}"}' --insecure | jq -r .links.self
+  register: rancher_registration_link
+  when:
+    - (rancher_node_role == "server")
+
+- name: Get node registration command for nodes
+  ansible.builtin.shell: |
+    curl '{{ rancher_registration_link.stdout }}' -H 'content-type: application/json' -H "Authorization: Bearer {{ rancher_api_key.stdout }}" --insecure | jq -r .nodeCommand
+  register: rancher_node_register
+  when:
+    - (rancher_node_role == "server")
+
+- name: Add dummy host for safekeeping var rancher_node_register
+  ansible.builtin.add_host:
+    name: rancher_node_start_command
+    groups: rancher-lab
+    export_node_start: "{{rancher_node_register.stdout}}"
+  register: export_node_start
+  when:
+    - (rancher_node_role == "server")

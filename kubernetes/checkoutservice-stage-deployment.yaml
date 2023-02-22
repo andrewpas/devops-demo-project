@@ -1,0 +1,87 @@
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: stage-checkoutservice
+  namespace: stage-microservices-demo
+  labels:
+    deployment_name: stage-checkoutservice
+    app.kubernetes.io/name: checkoutservice
+    app.kubernetes.io/version: "0.1.0"
+    project_name: microservices-demo
+    namespace_name: stage-microservices-demo
+    app.kubernetes.io/created-by: developer_company.com
+    app.kubernetes.io/managed-by: devops_company.com
+    environment_stage: stage
+    environment_uri: stage-env.company.com
+    app.kubernetes.io/component: advertise-service
+    business_domain: sales
+    business_owner: marketing_company.com
+    app.kubernetes.io/instance: baremetal-rancher
+
+spec:
+  replicas: 1
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxSurge: 25%
+      maxUnavailable: 25%
+  template:
+    metadata:
+      name: stage-checkoutservice
+      namespace: stage-microservices-demo
+      labels:
+        deployment_name: stage-checkoutservice
+        deployment_app: checkoutservice
+        app.kubernetes.io/name: checkoutservice
+        app.kubernetes.io/version: "0.1.0"
+        project_name: microservices-demo
+        namespace_name: stage-microservices-demo
+    spec:
+      containers:
+        - name: stage-checkoutservice
+          image: registry.gitlab.com/devops1121/microservices-demo-google/checkoutservice:stage
+          imagePullPolicy: Always
+          resources:
+            requests:
+              memory: 512Mi
+              cpu: 500m
+            limits:
+              memory: 1Gi
+              cpu: 1000m
+          ports:
+            - containerPort: 5050
+              protocol: TCP
+              name: grpc
+          env:
+          - name: PORT
+            value: "5050"
+          - name: "DISABLE_TRACING"
+            value: "1"
+          - name: "DISABLE_PROFILER"
+            value: "1"
+          - name: "DISABLE_STATS"
+            value: "1"
+          - name: "PRODUCT_CATALOG_SERVICE_ADDR"
+            value: "productcatalogservice:3550"
+          - name: "SHIPPING_SERVICE_ADDR"
+            value: "shippingservice:50051"
+          - name: "PAYMENT_SERVICE_ADDR"
+            value: "paymentservice:50051"
+          - name: "EMAIL_SERVICE_ADDR"
+            value: "emailservice:5000"
+          - name: "CURRENCY_SERVICE_ADDR"
+            value: "currencyservice:7000"
+          - name: "CART_SERVICE_ADDR"
+            value: "cartservice:7070"
+ 
+      restartPolicy: Always
+      imagePullSecrets:
+        - name: registry.gitlab
+  selector:
+    matchLabels:
+      deployment_app: checkoutservice
+      namespace_name: stage-microservices-demo
+      environment_stage: stage
+
+

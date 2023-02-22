@@ -1,0 +1,19 @@
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: emailservice
+  namespace: prod-microservices-demo
+spec:
+  internalTrafficPolicy: Cluster
+  ports:
+    - name: grpc
+      port: 5000
+      protocol: TCP
+      targetPort: 8080
+  selector:
+    app: emailservice
+    project: microservices-demo
+    stage: prod
+  sessionAffinity: None
+  type: ClusterIP

@@ -1,0 +1,56 @@
+---
+# @action ./tasks/ubuntu20/docker.yml # Підключає apt repository від Docker, перемикає на нього інсталятор, встановлює Docker, вмикає маршрутизацію `ipv4`, вимикає firewall (тимчасове рішення для тестів), завантажує образи Docker від Rancher, які визначаються через змінні `rancher_agent_image` та `rancher_image`.
+# @todo ./ubuntu20/docker.yml > `Task - Disable firewall (ufw)` # Замінити вимкнення firewall логікою, яка відкриває потрібні сервіси в залежності від значення змінної `rancher_node_role`
+- name: Add Docker PGP key
+  ansible.builtin.apt_key:
+    state: present
+    url: https://download.docker.com/linux/ubuntu/gpg
+    validate_certs: no
+
+- name: Add Docker repo
+  ansible.builtin.apt_repository:
+    repo: "deb [arch=amd64] https://download.docker.com/linux/ubuntu  {{ ansible_distribution_release }} stable"
+    validate_certs: no
+    state: present
+    update_cache: yes
+    install_python_apt: yes
+
+- name: Switch to correct Docker source for repo
+  ansible.builtin.command: /usr/bin/apt-cache policy docker-ce
+
+- name: Install Docker in Ubuntu
+  ansible.builtin.apt:
+    name: ["docker-ce=5:20.10.12~3-0~ubuntu-focal", "docker-compose"]
+    update_cache: yes
+    state: present
+    allow_downgrade: yes
+
+
+- name: Enable iptables NAT
+  ansible.posix.sysctl:
+    name: net.ipv4.ip_forward
+    value: '1'
+    state: present
+    reload: true
+
+- name: Disable firewall (ufw)
+  ansible.builtin.systemd:
+    name: ufw
+    state: stopped
+    masked: yes
+
+- name: Enable Docker Service
+  ansible.builtin.systemd:
+    name: docker
+    enabled: yes
+    masked: no
+    state: started
+
+- name: Pull Rancher docker images
+  docker_image:
+    name: "{{ item }}"
+    source: pull
+    state: present
+  loop:
+    - rancher/{{ rancher_agent_image }}
+    - rancher/{{rancher_image}}

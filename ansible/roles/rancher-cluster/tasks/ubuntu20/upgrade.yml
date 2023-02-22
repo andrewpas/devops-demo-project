@@ -1,0 +1,31 @@
+---
+# @action ./tasks/ubuntu20/upgrade.yml # Вимикає автоматичне оновлення пакетів, оновлює наявні до останньої версії, та перезавантажує ноди на випадок якщо було встановлено нове ядро linux.
+# @todo ./ubuntu20/upgrade.yml > `Task - Reboot node` # Додати логіку пошуку події оновлення ядра, та поставити як умову для перезавантаження ноди, якщо встановлено нове ядро.
+- name: Disable Ubuntu automatic updates
+  ansible.builtin.apt:
+    name: "{{ item }}"
+    state: absent
+  loop:
+    - unattended-upgrades
+    - update-notifier
+    - update-manager
+
+
+- name: Update for latest packets
+  ansible.builtin.apt:
+    autoclean: yes
+    update_cache: yes
+    name: "*"
+    state: latest
+
+
+- name: Dist upgrade
+  ansible.builtin.apt:
+    autoclean: yes
+    update_cache: yes
+    upgrade: dist
+
+- name: Reboot node
+  ansible.builtin.reboot:
+    msg: "reboot node {{ansible_fqdn}}"
+

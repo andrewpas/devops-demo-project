@@ -1,0 +1,50 @@
+---
+# @var ansible_port: 22 # SSH host port
+ansible_port: 22
+
+# @var ansible_host:  # Host IP
+ansible_host: 192.168.101.141 # Host IP
+
+# @var ansible_distribution: ubuntu # Підтримуються: Alpine, Altlinux, Amazon, Archlinux, ClearLinux, Coreos, Centos, Debian, Gentoo, Mandriva, NA, OpenWrt, OracleLinux, RedHat, Slackware, SMGL, SUSE, VMwareESX. Нижній регістр.
+ansible_distribution: 'ubuntu'
+
+# @var ansible_distribution_release: focal # Версія дистрибутиву. В цієї ролі використовується focal, тобто Ubuntu 20.04 (LTS)
+ansible_distribution_release: 'focal'
+
+ansible_fqdn: 'node1.example.net'
+
+ansible_domain: 'example.net'
+
+ansible_hostname: 'node1.example.net'
+
+ansible_nodename: 'node1'
+
+# @var rancher_image: rancher:v2.6.6 # Тег Docker образу сервера Rancher. Буде встановлено на ноду з `rancher_node_role: "server"`
+rancher_image: "rancher:v2.6.6"
+
+# @var rancher_agent_image: rancher-agent:v2.6.6 # Тег Docker образу агента rancher, котрий встановлюється на кожну ноду для зв\'язку з сервером Rancher. Буде встановлено на ноду з `rancher_node_role: "node"`
+rancher_agent_image: "rancher-agent:v2.6.6"
+
+# @var rancher_node_role: node # "Маркер" який вказує на роль ноди в кластері. `server` - головний сервер, на базі якого буде будуватися кластер, та встановлюватися необхідне програмне забезпечення на ноди. Потрібна хоча б одна нода с цією роллю. `control` - буде встановлено Kubernetes `Control Plane`. `node` - робоча нода (`Worker Node`), на яку буде встановлено ПЗ Rancher. Ця змінна по змісту схожа на `rancher_role_flags`, але в неї інша функція.
+rancher_node_role: "server"
+
+# @var rancher_k8s_version: 1.20.15 # Версія Kubernetes, яку буде встановлено на всі ноди.
+rancher_k8s_version: "1.20.15"
+
+# @var rancher_setup_password: # Пароль для з\'єднання с web-інтерфейсом та API для адміністрування. Адреса для з\'єднання визначається в змінної `rancher_server_url_name`. Потрібно вказати тільки на нодах з `rancher_node_role: "server"`
+rancher_setup_password: "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
+
+# @var rancher_role_flags: --worker # Роль, яку буде виконувати нода. `--etcd` - одна з нод в кластері etcd, які зберігають поточний стан кластера Kubernetes. Потрібно як найменш 3 ноди с цією роллю. `--controlplane` - нода на якої виконуються Kubernetes shedulers та ін., може бути в одному екземплярі, але бажано щоб їх було декілька. `--worker` - будуть встановлені `kubelet`, `kube-proxy`. Для `--etcd` та `--controlplane` потрібно достатньо ресурсів, тому бажано відводити для них не менш ніж 8Gb оперативної пам'яті. Всі ці ролі також можуть буди встановлені на одну ноду.
+rancher_role_flags: "--etcd --controlplane --worker"
+
+# @var rancher_server_url_name: "https://192.168.101.141" # Адреса для з\'єднання с web-інтерфейсом та API сервера. Бажано використовувати IP-адресу. Або коректно налаштувати локальну DNS-зону на DNS-сервері.
+rancher_server_url_name: "https://192.168.101.141"
+
+# @var rancher_init_ip: # IP адреса до якої будуть з\'єднуватися ноди за допомогою `curl`. Потрібно вказувати IP-адресу ноди з `rancher_node_role: "server"`
+rancher_init_ip: "192.168.101.141"
+
+# @var rancher_cluster_name: # Ім\'я кластера Kubernetes, який буде створено після встановлення всього необхідного ПЗ. Всі сценарії в ролі будуть використовувати з\'єднання нод з цим кластером.
+rancher_cluster_name: "dev-cluster"
+
+# @var base_packages: ["bash-completion", "bind9utils", "curl", "git", "git-extras", "htop", "iptraf", "lsof"] # Базові програмні пакети, яки необхідні для системного адміністрування ноди.
+base_packages: ["bash-completion", "bind9utils", "curl", "gcc", "git", "git-extras", "htop", "iptraf", "lsof", "net-tools", "python3-pip", "bsd-mailx", "man", "mc", "mdadm", "nano", "nfs-common", "ntpdate", "python-pexpect", "python3-pexpect", "psmisc", "python3-pymongo", "python-setuptools", "sysfsutils", "sysstat", "telnet", "traceroute", "unzip", "vim", "wget", "zip", "iotop", "tzdata", "qemu-guest-agent", "tmux", "open-iscsi", "jq", "apt-transport-https", "ca-certificates", "software-properties-common", "httpie", "libnss3", "libnss3-dev", "lsb-release"]

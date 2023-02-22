@@ -1,0 +1,11 @@
+---
+# @action ./tasks/ubuntu20/pip.yml # Встановлення необхідних python pip-пакетів. Пакети можна додавати в перелік `loop`. Потребує пакет `python3-pip`, який потрібно встановити на ноду.
+- name: Install Python modules for Docker
+  ansible.builtin.pip:
+    name: "{{ item }}"
+    state: present
+  loop:
+    - pyopenssl
+    - ndg-httpsclient
+    - pyasn1
+    - urllib3
